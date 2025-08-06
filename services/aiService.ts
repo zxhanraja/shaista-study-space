@@ -224,6 +224,91 @@ export const getAmendmentsForTopic = async (subject: string, topic: string): Pro
     }
 };
 
+
+/**
+ * Generates performance insights based on study data.
+ * @param stats - An object containing performance statistics.
+ * @returns The AI's text response with coaching advice.
+ */
+export const getPerformanceInsights = async (stats: object): Promise<string> => {
+    const prompt = `
+        You are an expert, encouraging, and friendly CA exam coach named 'Motki's Assistant'.
+        Your student, Shaista, has provided her latest performance data.
+        Your task is to analyze this data and provide a short, actionable, and encouraging summary.
+
+        **Student's Performance Data:**
+        ${JSON.stringify(stats, null, 2)}
+
+        **Instructions:**
+        1.  **Analyze the Data:** Look at the overall accuracy, subject-wise accuracy, and daily challenge trends.
+        2.  **Identify Strengths:** Start by pointing out something Shaista is doing well. Be specific (e.g., "Your consistency in Daily Challenges is fantastic!").
+        3.  **Identify Area for Improvement:** Gently point out the subject or area with the lowest accuracy. Frame it as an opportunity, not a failure (e.g., "It looks like 'Taxation' is a bit tricky right now, which is very common! Let's focus on that.").
+        4.  **Provide Actionable Advice:** Give one or two simple, concrete suggestions. For example, "Maybe try solving 3-4 more practical problems from Taxation this week," or "How about creating a few flashcards for the key sections in Corporate Law?"
+        5.  **Maintain Tone:** Keep the tone positive, motivating, and personal. Address her as Shaista. End with an encouraging note like "You're making great progress. Keep up the amazing work!".
+        6.  **Keep it Concise:** The entire response should be a few short paragraphs.
+
+        Generate the coaching message based on the data.
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        
+        const text = response.text;
+        if (!text) throw new Error("Received an empty response from the AI service.");
+        return text.trim();
+
+    } catch (error) {
+        console.error("Gemini API Error in getPerformanceInsights:", error);
+        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        throw new Error(`Failed to get performance insights: ${message}`);
+    }
+};
+
+
+/**
+ * Gets a summary of a legal or tax section.
+ * @param query - The user's query (e.g., "Section 80C of Income Tax Act").
+ * @returns A promise that resolves to the AI-generated summary.
+ */
+export const getSectionSummary = async (query: string): Promise<string> => {
+    const prompt = `
+        You are an expert AI assistant for CA (Chartered Accountancy) students in India.
+        Your task is to explain a specific legal or tax section in a simple, clear, and concise manner.
+
+        **Query:** "${query}"
+
+        **Instructions:**
+        1.  **Identify the Section:** Determine the exact act and section number from the user's query.
+        2.  **Provide a Core Summary:** Start with a one-sentence summary of what the section is about.
+        3.  **Explain Key Provisions:** In simple bullet points or short paragraphs, explain the main provisions, applicability, limits, and any important conditions of the section.
+        4.  **Use Simple Language:** Avoid overly technical legal jargon. Explain it as you would to a student who is learning it for the first time. Use analogies if helpful.
+        5.  **Mention Recent Amendments (if any):** If there are recent, significant amendments to this section, briefly mention them.
+        6.  **Format for Readability:** Use paragraphs and bullet points to structure the information clearly.
+        
+        Return ONLY the explanation. Do not include conversational text like "Sure, here is the explanation...".
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        const text = response.text;
+        if (!text) {
+            throw new Error("Received an empty response from the AI service for the section summary.");
+        }
+        return text.trim();
+
+    } catch (error) {
+        console.error("Gemini API Error in getSectionSummary:", error);
+        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        throw new Error(`Failed to generate section summary: ${message}`);
+    }
+};
+
+
 /**
  * Balances a chemical equation using the Gemini API.
  * @param equation - The unbalanced chemical equation (e.g., "H2 + O2 -> H2O").

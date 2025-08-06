@@ -18,12 +18,14 @@ const formatTime = (seconds: number) => {
 
 interface DailyChallengeProps {
     onBackToDashboard: () => void;
+    onSaveResult: (result: { score: number, total_questions: number, quiz_title: string }) => void;
 }
 
-const DailyChallenge: React.FC<DailyChallengeProps> = ({ onBackToDashboard }) => {
+const DailyChallenge: React.FC<DailyChallengeProps> = ({ onBackToDashboard, onSaveResult }) => {
     const [status, setStatus] = useState<QuizStatus>('loading');
     const [quiz, setQuiz] = useState<Quiz | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [hasSaved, setHasSaved] = useState(false);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
@@ -32,6 +34,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ onBackToDashboard }) =>
     const loadQuiz = useCallback(async () => {
         setStatus('loading');
         setError(null);
+        setHasSaved(false);
         try {
             const newQuiz = await getDailyQuizQuestions();
             if (newQuiz.questions.length > 0) {
@@ -49,6 +52,27 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ onBackToDashboard }) =>
     useEffect(() => {
         loadQuiz();
     }, [loadQuiz]);
+
+    const score = userAnswers.reduce((total, answer) => {
+        const question = quiz?.questions[answer.questionIndex];
+        if (question && question.correctOption === answer.selectedOption) {
+            return total + 1;
+        }
+        return total;
+    }, 0);
+
+    // Effect to save result when quiz is completed
+    useEffect(() => {
+        if (status === 'completed' && quiz && !hasSaved) {
+            onSaveResult({
+                score,
+                total_questions: quiz.questions.length,
+                quiz_title: quiz.title,
+            });
+            setHasSaved(true);
+        }
+    }, [status, quiz, score, hasSaved, onSaveResult]);
+
 
     // Timer effect
     useEffect(() => {
@@ -80,13 +104,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ onBackToDashboard }) =>
         }
     };
 
-    const score = userAnswers.reduce((total, answer) => {
-        const question = quiz?.questions[answer.questionIndex];
-        if (question && question.correctOption === answer.selectedOption) {
-            return total + 1;
-        }
-        return total;
-    }, 0);
 
     // --- RENDER FUNCTIONS --- //
 

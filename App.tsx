@@ -15,8 +15,10 @@ import ProblemView from './components/ProblemView';
 import Calculator from './components/Calculator';
 import DailyChallenge from './components/DailyChallenge';
 import AmendmentTracker from './components/AmendmentTracker';
+import PerformanceAnalytics from './components/PerformanceAnalytics';
+import SectionLookup from './components/SectionLookup';
 
-import { Page, Task, Exam, Doubt, Subject, Profile, Problem, ChatMessage, Amendment, Database } from './types';
+import { Page, Task, Exam, Doubt, Subject, Profile, Problem, ChatMessage, Amendment, Database, DailyChallengeHistory } from './types';
 import { getCollection, addDocument, updateDocument, deleteDocument } from './services/supabaseService';
 import { getAmendmentsForTopic } from './services/aiService';
 import { supabase } from './services/supabase';
@@ -34,6 +36,7 @@ const App: React.FC = () => {
     const [subjects, setSubjects] = useState<Database['public']['Tables']['subjects']['Row'][]>([]);
     const [problems, setProblems] = useState<Database['public']['Tables']['problems']['Row'][]>([]);
     const [amendments, setAmendments] = useState<Database['public']['Tables']['amendments']['Row'][]>([]);
+    const [dailyChallengeHistory, setDailyChallengeHistory] = useState<Database['public']['Tables']['daily_challenge_history']['Row'][]>([]);
     const [profile, setProfile] = useState<Database['public']['Tables']['profiles']['Row'] | null>(null);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     
@@ -54,14 +57,15 @@ const App: React.FC = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const [tasksData, examsData, doubtsData, subjectsData, profileData, problemsData, amendmentsData] = await Promise.all([
+            const [tasksData, examsData, doubtsData, subjectsData, profileData, problemsData, amendmentsData, challengeHistoryData] = await Promise.all([
                 getCollection('tasks'),
                 getCollection('exams', 'date', 'asc'),
                 getCollection('doubts'),
                 getCollection('subjects'),
                 getCollection('profiles').then(data => data[0] || null),
                 getCollection('problems'),
-                getCollection('amendments', 'created_at', 'desc')
+                getCollection('amendments', 'created_at', 'desc'),
+                getCollection('daily_challenge_history', 'created_at', 'desc')
             ]);
             setTasks(tasksData);
             setExams(examsData);
@@ -70,6 +74,7 @@ const App: React.FC = () => {
             setProfile(profileData);
             setProblems(problemsData);
             setAmendments(amendmentsData);
+            setDailyChallengeHistory(challengeHistoryData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load data. Please check your connection.');
         } finally {
@@ -134,6 +139,7 @@ const App: React.FC = () => {
         const handleAdd = async (item: U) => {
             const newItem = await addDocument(tableName, item as any);
             setState(prev => [newItem as unknown as T, ...prev]);
+            return newItem as unknown as T;
         };
         const handleUpdate = async (id: number, updates: Partial<T>) => {
             await updateDocument(tableName, id, updates as any);
@@ -151,22 +157,33 @@ const App: React.FC = () => {
     const doubtHandlers = createCrudHandlers(doubts, setDoubts, 'doubts');
     const subjectHandlers = createCrudHandlers(subjects, setSubjects, 'subjects');
     const problemHandlers = createCrudHandlers(problems, setProblems, 'problems');
+    const challengeHistoryHandlers = createCrudHandlers(dailyChallengeHistory, setDailyChallengeHistory, 'daily_challenge_history');
 
-    const handleAddTask = (text: string, subject: string) => taskHandlers.handleAdd({ text, subject, completed: false });
+    const handleAddTask = async (text: string, subject: string) => {
+        await taskHandlers.handleAdd({ text, subject, completed: false });
+    };
     const handleToggleTask = (id: number, completed: boolean) => taskHandlers.handleUpdate(id, { completed });
     const handleDeleteTask = (id: number) => taskHandlers.handleDelete(id);
 
-    const handleAddExam = (name: string, date: string) => examHandlers.handleAdd({ name, date, start_date: new Date().toISOString(), progress: 0 });
+    const handleAddExam = async (name: string, date: string) => {
+        await examHandlers.handleAdd({ name, date, start_date: new Date().toISOString(), progress: 0 });
+    };
     const handleUpdateExam = (id: number, data: Partial<Exam>) => examHandlers.handleUpdate(id, data);
     const handleDeleteExam = (id: number) => examHandlers.handleDelete(id);
 
-    const handleAddDoubt = (doubt: Omit<Doubt, 'id'>) => doubtHandlers.handleAdd(doubt);
+    const handleAddDoubt = async (doubt: Omit<Doubt, 'id'>) => {
+        await doubtHandlers.handleAdd(doubt);
+    };
     
-    const handleAddSubject = (name: string) => subjectHandlers.handleAdd({ name });
+    const handleAddSubject = async (name: string) => {
+        await subjectHandlers.handleAdd({ name });
+    };
     const handleUpdateSubject = (id: number, name: string) => subjectHandlers.handleUpdate(id, { name });
     const handleDeleteSubject = (id: number) => subjectHandlers.handleDelete(id);
 
-    const handleAddProblem = (question: string, subject: string, topic: string) => problemHandlers.handleAdd({ question, subject, topic, status: 'unsolved', is_bookmarked: false, user_solution: null, ai_solution: null });
+    const handleAddProblem = async (question: string, subject: string, topic: string) => {
+        await problemHandlers.handleAdd({ question, subject, topic, status: 'unsolved', is_bookmarked: false, user_solution: null, ai_solution: null });
+    };
     const handleUpdateProblem = (id: number, data: Partial<Problem>) => problemHandlers.handleUpdate(id, data);
     const handleDeleteProblem = async (id: number) => {
         await problemHandlers.handleDelete(id);
@@ -188,6 +205,10 @@ const App: React.FC = () => {
             console.error('Failed to fetch or save amendments:', error);
             alert(`Error fetching amendments: ${(error as Error).message}`);
         }
+    };
+
+    const handleSaveChallengeResult = (result: Omit<DailyChallengeHistory, 'id' | 'created_at'>) => {
+        challengeHistoryHandlers.handleAdd(result);
     };
 
     const renderPage = () => {
@@ -220,7 +241,9 @@ const App: React.FC = () => {
             case Page.ProblemSolver:
                 return <ProblemSolver problems={problems} subjects={subjects} onAddProblem={handleAddProblem} onSelectProblem={setSelectedProblem} />;
             case Page.DailyChallenge:
-                return <DailyChallenge onBackToDashboard={() => setActivePage(Page.Dashboard)} />;
+                return <DailyChallenge onBackToDashboard={() => setActivePage(Page.Dashboard)} onSaveResult={handleSaveChallengeResult} />;
+            case Page.PerformanceAnalytics:
+                return <PerformanceAnalytics problems={problems} history={dailyChallengeHistory} />;
             case Page.ExamTracker:
                 return <ExamTracker exams={exams} onAddExam={handleAddExam} onUpdateExam={handleUpdateExam} onDeleteExam={handleDeleteExam} />;
             case Page.PomodoroTimer:
@@ -239,6 +262,8 @@ const App: React.FC = () => {
                 return <Calculator />;
             case Page.AmendmentTracker:
                 return <AmendmentTracker amendments={amendments} onFetchAmendments={handleFetchAndSaveAmendments} />;
+            case Page.SectionLookup:
+                return <SectionLookup />;
             case Page.Settings:
                 return <Settings profile={profile} onUpdateProfile={handleUpdateProfile} />;
             default:

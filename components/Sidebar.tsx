@@ -15,6 +15,8 @@ const ProblemSolverIcon: React.FC<IconProps> = ({ className }) => (<svg classNam
 const CalculatorIcon: React.FC<IconProps> = ({ className }) => (<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM7 12h2m-2 4h2m4-4h2m-2 4h2m4-4h2m-2 4h2M5 10h14v10H5V10z" /></svg>);
 const DailyChallengeIcon: React.FC<IconProps> = ({ className }) => (<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
 const AmendmentIcon: React.FC<IconProps> = ({ className }) => (<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>);
+const PerformanceIcon: React.FC<IconProps> = ({ className }) => (<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>);
+const SectionLookupIcon: React.FC<IconProps> = ({ className }) => (<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>);
 
 
 const navItems = [
@@ -23,10 +25,12 @@ const navItems = [
     { id: Page.SubjectNotes, icon: NotesIcon },
     { id: Page.ProblemSolver, icon: ProblemSolverIcon },
     { id: Page.DailyChallenge, icon: DailyChallengeIcon },
+    { id: Page.PerformanceAnalytics, icon: PerformanceIcon },
     { id: Page.ExamTracker, icon: ExamIcon },
     { id: Page.PomodoroTimer, icon: TimerIcon },
     { id: Page.Calculator, icon: CalculatorIcon },
     { id: Page.AmendmentTracker, icon: AmendmentIcon },
+    { id: Page.SectionLookup, icon: SectionLookupIcon },
 ];
 
 interface SidebarProps {

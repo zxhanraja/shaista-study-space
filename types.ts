@@ -6,10 +6,12 @@ export enum Page {
     SubjectNotes = 'Subject Notes',
     ProblemSolver = 'Problem Solver',
     DailyChallenge = 'Daily Challenge',
+    PerformanceAnalytics = 'Performance Analytics',
     ExamTracker = 'Exam Tracker',
     PomodoroTimer = "Shaista's Timer",
     Calculator = 'Calculator',
     AmendmentTracker = 'Amendment Tracker',
+    SectionLookup = 'Section Lookup',
     Settings = 'Settings',
 }
 
@@ -98,6 +100,15 @@ export interface Amendment {
   summary: { points: string[] };
 }
 
+export interface DailyChallengeHistory {
+  id: number;
+  created_at: string;
+  score: number;
+  total_questions: number;
+  quiz_title: string;
+}
+
+
 export type Database = {
   public: {
     Tables: {
@@ -135,6 +146,11 @@ export type Database = {
         Row: Amendment;
         Insert: Omit<Amendment, 'id' | 'created_at'>;
         Update: Partial<Omit<Amendment, 'id' | 'created_at'>>;
+      };
+      daily_challenge_history: {
+        Row: DailyChallengeHistory;
+        Insert: Omit<DailyChallengeHistory, 'id' | 'created_at'>;
+        Update: Partial<Omit<DailyChallengeHistory, 'id' | 'created_at'>>;
       };
     };
     Functions: {};
