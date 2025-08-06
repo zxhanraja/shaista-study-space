@@ -204,7 +204,7 @@ const App: React.FC = () => {
         switch (activePage) {
             case Page.Dashboard:
                 return <Dashboard
-                    tasks={tasks.filter(t => !t.completed)}
+                    tasks={tasks}
                     onToggleTask={handleToggleTask}
                     timeLeft={timeLeft}
                     isTimerActive={isTimerActive}

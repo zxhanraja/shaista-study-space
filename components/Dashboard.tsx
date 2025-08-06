@@ -43,7 +43,7 @@ const TodaysTasks: React.FC<{ tasks: Task[], onToggleTask: (id: number, complete
                             ? <CheckCircleIcon className="w-5 h-5 text-brand-primary"/>
                             : <div className="w-5 h-5 rounded-full border-2 border-brand-secondary group-hover:border-brand-primary transition-colors"></div>
                         }
-                        <span className={`flex-1 ${task.completed ? 'line-through text-brand-text-secondary' : 'text-brand-text-primary'}`}>{task.text}</span>
+                        <span className={`flex-1 text-brand-text-primary ${task.completed ? 'line-through' : ''}`}>{task.text}</span>
                     </li>
                 ))}
                  {tasks.length === 0 && <p className="text-brand-text-secondary text-sm">No tasks for today. Add some!</p>}
